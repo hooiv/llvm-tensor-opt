@@ -1,0 +1,5 @@
+add_subdirectory(Transforms)
+add_subdirectory(Analysis)
+add_subdirectory(CUDA)
+add_subdirectory(MLIR)
+add_subdirectory(AutoTuning)
