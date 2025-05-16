@@ -4,9 +4,11 @@
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/LegacyPassManager.h"
-#include "llvm/Transforms/IPO/PassManagerBuilder.h"
+#include "llvm/IR/PassManager.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Support/Debug.h"
+#include "llvm/Passes/PassPlugin.h"
+#include "llvm/Passes/PassBuilder.h"
 
 #define DEBUG_TYPE "tensor-data-flow-analysis"
 
@@ -127,6 +129,26 @@ void TensorDataFlowAnalysisWrapperPass::getAnalysisUsage(AnalysisUsage &AU) cons
 
 // Register the legacy pass
 static RegisterPass<TensorDataFlowAnalysisWrapperPass> X("tensor-data-flow-analysis", "Tensor Data Flow Analysis Pass");
+
+// Register the pass with the new pass manager
+static PassPluginLibraryInfo getTensorDataFlowAnalysisPluginInfo() {
+  return {
+    LLVM_PLUGIN_API_VERSION, "TensorDataFlowAnalysis", LLVM_VERSION_STRING,
+    [](PassBuilder &PB) {
+      PB.registerAnalysisRegistrationCallback(
+        [](FunctionAnalysisManager &FAM) {
+          FAM.registerPass([&] { return TensorDataFlowAnalysis(); });
+        }
+      );
+    }
+  };
+}
+
+// This is the core interface for pass plugins. It guarantees that 'opt' will
+// recognize the pass when added to the pass pipeline on the command line
+extern "C" LLVM_ATTRIBUTE_WEAK PassPluginLibraryInfo llvmGetPassPluginInfo() {
+  return getTensorDataFlowAnalysisPluginInfo();
+}
 
 } // namespace tensor
 } // namespace llvm
