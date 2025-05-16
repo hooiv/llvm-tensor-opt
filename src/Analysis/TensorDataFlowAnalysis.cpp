@@ -20,6 +20,11 @@ using namespace llvm;
 namespace llvm {
 namespace tensor {
 
+// Forward declarations for helper functions
+bool isTensorOperation(Instruction *I);
+bool hasTensorAccessPattern(Instruction *I);
+bool hasMultidimensionalAccess(Value *V);
+
 // Unique ID for analysis pass
 AnalysisKey TensorDataFlowAnalysis::Key;
 

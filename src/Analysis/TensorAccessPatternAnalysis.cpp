@@ -21,6 +21,12 @@ using namespace llvm;
 namespace llvm {
 namespace tensor {
 
+// Forward declarations for helper functions
+AccessPattern analyzeAccessPattern(Instruction *I);
+AccessPattern inferAccessPattern(Instruction *I);
+void updateStatistics(AccessPattern Pattern);
+bool isTensorOperation(Instruction *I);
+
 // Unique ID for analysis pass
 AnalysisKey TensorAccessPatternAnalysis::Key;
 
