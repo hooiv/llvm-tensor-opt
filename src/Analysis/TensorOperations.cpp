@@ -325,6 +325,15 @@ std::string TensorContractionOp::toString() const {
 // Register pattern matchers for the new tensor operations
 namespace {
 
+// Helper function to check if a function name contains a substring
+// This is the same function as in TensorOperationRegistry.cpp
+bool functionNameContains(const CallInst *Call, StringRef Substring) {
+  if (const Function *F = Call->getCalledFunction()) {
+    return F->getName().contains(Substring);
+  }
+  return false;
+}
+
 // Pattern matcher for element-wise add operations
 bool isElementWiseAdd(Instruction *Inst) {
   if (auto *BinOp = dyn_cast<BinaryOperator>(Inst)) {
@@ -332,12 +341,12 @@ bool isElementWiseAdd(Instruction *Inst) {
       // Check if the operands have the same type and dimensions
       Type *LHSType = BinOp->getOperand(0)->getType();
       Type *RHSType = BinOp->getOperand(1)->getType();
-      
+
       // For now, just check if the types are the same
       return LHSType == RHSType;
     }
   }
-  
+
   // Check for direct calls to element-wise add functions
   if (auto *Call = dyn_cast<CallInst>(Inst)) {
     if (functionNameContains(Call, "add") ||
@@ -345,7 +354,7 @@ bool isElementWiseAdd(Instruction *Inst) {
       return true;
     }
   }
-  
+
   return false;
 }
 
@@ -356,12 +365,12 @@ bool isElementWiseMul(Instruction *Inst) {
       // Check if the operands have the same type and dimensions
       Type *LHSType = BinOp->getOperand(0)->getType();
       Type *RHSType = BinOp->getOperand(1)->getType();
-      
+
       // For now, just check if the types are the same
       return LHSType == RHSType;
     }
   }
-  
+
   // Check for direct calls to element-wise mul functions
   if (auto *Call = dyn_cast<CallInst>(Inst)) {
     if (functionNameContains(Call, "mul") ||
@@ -369,7 +378,7 @@ bool isElementWiseMul(Instruction *Inst) {
       return true;
     }
   }
-  
+
   return false;
 }
 
