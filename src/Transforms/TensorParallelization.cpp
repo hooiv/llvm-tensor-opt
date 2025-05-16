@@ -73,11 +73,6 @@ bool parallelizeTensorOperation(Instruction *I) {
   return true;
 }
 
-// Legacy pass interface implementation
-std::unique_ptr<FunctionPass> createTensorParallelizationPass() {
-  return std::make_unique<LegacyTensorParallelizationPass>();
-}
-
 // Legacy pass implementation
 struct LegacyTensorParallelizationPass : public FunctionPass {
   static char ID;
@@ -98,6 +93,11 @@ struct LegacyTensorParallelizationPass : public FunctionPass {
 };
 
 char LegacyTensorParallelizationPass::ID = 0;
+
+// Legacy pass interface implementation
+std::unique_ptr<FunctionPass> createTensorParallelizationPass() {
+  return std::make_unique<LegacyTensorParallelizationPass>();
+}
 
 // Register the legacy pass
 static RegisterPass<LegacyTensorParallelizationPass> X("tensor-parallelization", "Tensor Operation Parallelization Pass");

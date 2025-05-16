@@ -73,11 +73,6 @@ bool vectorizeTensorOperation(Instruction *I) {
   return true;
 }
 
-// Legacy pass interface implementation
-std::unique_ptr<FunctionPass> createTensorVectorizationPass() {
-  return std::make_unique<LegacyTensorVectorizationPass>();
-}
-
 // Legacy pass implementation
 struct LegacyTensorVectorizationPass : public FunctionPass {
   static char ID;
@@ -98,6 +93,11 @@ struct LegacyTensorVectorizationPass : public FunctionPass {
 };
 
 char LegacyTensorVectorizationPass::ID = 0;
+
+// Legacy pass interface implementation
+std::unique_ptr<FunctionPass> createTensorVectorizationPass() {
+  return std::make_unique<LegacyTensorVectorizationPass>();
+}
 
 // Register the legacy pass
 static RegisterPass<LegacyTensorVectorizationPass> X("tensor-vectorization", "Tensor Operation Vectorization Pass");
