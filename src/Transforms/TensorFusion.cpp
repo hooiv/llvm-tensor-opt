@@ -21,6 +21,10 @@ using namespace llvm;
 namespace llvm {
 namespace tensor {
 
+// Forward declarations
+bool isCompatibleForFusion(AccessPattern A, AccessPattern B);
+bool fuseTensorOperations(Instruction *First, Instruction *Second);
+
 char TensorFusionPass::ID = 0;
 
 // Implementation of the new pass manager interface
@@ -106,11 +110,6 @@ bool fuseTensorOperations(Instruction *First, Instruction *Second) {
   return true;
 }
 
-// Legacy pass interface implementation
-std::unique_ptr<FunctionPass> createTensorFusionPass() {
-  return std::make_unique<LegacyTensorFusionPass>();
-}
-
 // Legacy pass implementation
 struct LegacyTensorFusionPass : public FunctionPass {
   static char ID;
@@ -133,6 +132,11 @@ struct LegacyTensorFusionPass : public FunctionPass {
 };
 
 char LegacyTensorFusionPass::ID = 0;
+
+// Legacy pass interface implementation
+std::unique_ptr<FunctionPass> createTensorFusionPass() {
+  return std::make_unique<LegacyTensorFusionPass>();
+}
 
 // Register the legacy pass
 static RegisterPass<LegacyTensorFusionPass> X("tensor-fusion", "Tensor Operation Fusion Pass");

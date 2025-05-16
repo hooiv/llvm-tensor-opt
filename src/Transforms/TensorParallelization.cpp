@@ -20,6 +20,10 @@ using namespace llvm;
 namespace llvm {
 namespace tensor {
 
+// Forward declarations
+bool isSuitableForParallelization(AccessPattern Pattern);
+bool parallelizeTensorOperation(Instruction *I);
+
 char TensorParallelizationPass::ID = 0;
 
 // Implementation of the new pass manager interface
