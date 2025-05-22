@@ -14,8 +14,7 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Passes/PassBuilder.h"
 #include "llvm/Passes/PassPlugin.h"
-#include "llvm/Transforms/IPO/PassManagerBuilder.h"
-#include "llvm/IR/LegacyPassManager.h"
+// Using the new pass manager, so we don't need legacy pass manager headers
 
 #include <chrono>
 #include <iostream>
@@ -43,7 +42,7 @@ static cl::opt<int> NumRuns("num-runs", cl::desc("Number of benchmark runs"), cl
 struct BenchmarkResult {
   std::string PassName;
   double TimeMs;
-  
+
   BenchmarkResult(const std::string& PassName, double TimeMs)
     : PassName(PassName), TimeMs(TimeMs) {}
 };
@@ -53,123 +52,123 @@ template <typename PassT>
 BenchmarkResult runPass(PassT& Pass, Function& F, FunctionAnalysisManager& FAM, const std::string& PassName) {
   // Warm up
   Pass.run(F, FAM);
-  
+
   // Benchmark
   std::vector<double> Times;
   for (int i = 0; i < NumRuns; ++i) {
     auto Start = high_resolution_clock::now();
     Pass.run(F, FAM);
     auto End = high_resolution_clock::now();
-    
+
     double TimeMs = duration_cast<microseconds>(End - Start).count() / 1000.0;
     Times.push_back(TimeMs);
   }
-  
+
   // Calculate average time
   double AvgTimeMs = std::accumulate(Times.begin(), Times.end(), 0.0) / Times.size();
-  
+
   return BenchmarkResult(PassName, AvgTimeMs);
 }
 
 int main(int argc, char **argv) {
   // Parse command line options
   cl::ParseCommandLineOptions(argc, argv, "LLVM Tensor Benchmark Tool\n");
-  
+
   // Create LLVM context
   LLVMContext Context;
   SMDiagnostic Err;
-  
+
   // Load the input module
   std::unique_ptr<Module> M = parseIRFile(InputFilename, Err, Context);
   if (!M) {
     Err.print(argv[0], errs());
     return 1;
   }
-  
+
   // Create a new pass manager
   PassBuilder PB;
-  
+
   // Create analysis managers
   LoopAnalysisManager LAM;
   FunctionAnalysisManager FAM;
   CGSCCAnalysisManager CGAM;
   ModuleAnalysisManager MAM;
-  
+
   // Register the analysis passes
   PB.registerModuleAnalyses(MAM);
   PB.registerCGSCCAnalyses(CGAM);
   PB.registerFunctionAnalyses(FAM);
   PB.registerLoopAnalyses(LAM);
   PB.crossRegisterProxies(LAM, FAM, CGAM, MAM);
-  
+
   // Register our custom analysis passes
   FAM.registerPass([&] { return tensor::TensorDataFlowAnalysis(); });
   FAM.registerPass([&] { return tensor::TensorAccessPatternAnalysis(); });
-  
+
   // Create our custom optimization passes
   tensor::TensorFusionPass FusionPass;
   tensor::TensorVectorizationPass VectorizationPass;
   tensor::TensorParallelizationPass ParallelizationPass;
-  
+
   // Benchmark results
   std::vector<BenchmarkResult> Results;
-  
+
   // Benchmark each function in the module
   for (auto& F : *M) {
     if (F.isDeclaration())
       continue;
-    
+
     outs() << "Benchmarking function: " << F.getName() << "\n";
-    
+
     // Benchmark analysis passes
     Results.push_back(runPass(tensor::TensorDataFlowAnalysis(), F, FAM, "TensorDataFlowAnalysis"));
     Results.push_back(runPass(tensor::TensorAccessPatternAnalysis(), F, FAM, "TensorAccessPatternAnalysis"));
-    
+
     // Benchmark optimization passes
     if (EnableFusion) {
       Results.push_back(runPass(FusionPass, F, FAM, "TensorFusion"));
     }
-    
+
     if (EnableVectorization) {
       Results.push_back(runPass(VectorizationPass, F, FAM, "TensorVectorization"));
     }
-    
+
     if (EnableParallelization) {
       Results.push_back(runPass(ParallelizationPass, F, FAM, "TensorParallelization"));
     }
   }
-  
+
   // Benchmark CUDA offloading
   if (EnableCUDAOffload) {
     tensor::cuda::CUDAOffloader Offloader;
-    
+
     // Warm up
     Offloader.offloadModule(*M);
-    
+
     // Benchmark
     std::vector<double> Times;
     for (int i = 0; i < NumRuns; ++i) {
       auto Start = high_resolution_clock::now();
       Offloader.offloadModule(*M);
       auto End = high_resolution_clock::now();
-      
+
       double TimeMs = duration_cast<microseconds>(End - Start).count() / 1000.0;
       Times.push_back(TimeMs);
     }
-    
+
     // Calculate average time
     double AvgTimeMs = std::accumulate(Times.begin(), Times.end(), 0.0) / Times.size();
-    
+
     Results.push_back(BenchmarkResult("CUDAOffload", AvgTimeMs));
   }
-  
+
   // Print benchmark results
   outs() << "\nBenchmark Results:\n";
   outs() << "=================\n";
   for (const auto& Result : Results) {
     outs() << Result.PassName << ": " << Result.TimeMs << " ms\n";
   }
-  
+
   // Write benchmark results to file if requested
   if (!BenchmarkOutputFilename.empty()) {
     std::error_code EC;
@@ -178,43 +177,43 @@ int main(int argc, char **argv) {
       errs() << "Error opening benchmark output file: " << EC.message() << "\n";
       return 1;
     }
-    
+
     OS << "Pass,TimeMs\n";
     for (const auto& Result : Results) {
       OS << Result.PassName << "," << Result.TimeMs << "\n";
     }
   }
-  
+
   // Apply all enabled passes to the module
   FunctionPassManager FPM;
-  
+
   if (EnableFusion) {
     FPM.addPass(tensor::TensorFusionPass());
   }
-  
+
   if (EnableVectorization) {
     FPM.addPass(tensor::TensorVectorizationPass());
   }
-  
+
   if (EnableParallelization) {
     FPM.addPass(tensor::TensorParallelizationPass());
   }
-  
+
   // Create a module pass manager
   ModulePassManager MPM;
-  
+
   // Add the function pass manager to the module pass manager
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
-  
+
   // Run the passes
   MPM.run(*M, MAM);
-  
+
   // Offload to CUDA if requested
   if (EnableCUDAOffload) {
     tensor::cuda::CUDAOffloader Offloader;
     Offloader.offloadModule(*M);
   }
-  
+
   // Write the transformed module to the output file
   if (!OutputFilename.empty()) {
     std::error_code EC;
@@ -227,6 +226,6 @@ int main(int argc, char **argv) {
   } else {
     outs() << *M;
   }
-  
+
   return 0;
 }
