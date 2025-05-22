@@ -5,45 +5,48 @@
 #include "llvm/IR/Instructions.h"
 #include "llvm/Support/Debug.h"
 #include <map>
+#include <vector>
+#include <memory>
+#include <algorithm>
 
 #define DEBUG_TYPE "cost-model"
 
-using namespace llvm;
-using namespace llvm::tensor;
+// Use explicit namespace references instead of 'using namespace'
+// to avoid namespace conflicts
 
 // SimpleCostModel implementation
-SimpleCostModel::SimpleCostModel() {
+llvm::tensor::SimpleCostModel::SimpleCostModel() {
   // Initialize cost factors for different tensor operations
-  OpCostFactors[TensorOpKind::MatrixMultiply] = 2.0;
-  OpCostFactors[TensorOpKind::Convolution] = 3.0;
-  OpCostFactors[TensorOpKind::ElementWiseAdd] = 1.0;
-  OpCostFactors[TensorOpKind::ElementWiseMul] = 1.0;
-  OpCostFactors[TensorOpKind::Reduction] = 1.5;
-  OpCostFactors[TensorOpKind::Transpose] = 1.2;
-  OpCostFactors[TensorOpKind::Reshape] = 0.5;
-  OpCostFactors[TensorOpKind::Concat] = 1.0;
-  OpCostFactors[TensorOpKind::Split] = 1.0;
-  OpCostFactors[TensorOpKind::Attention] = 2.5;
-  OpCostFactors[TensorOpKind::LayerNorm] = 1.5;
-  OpCostFactors[TensorOpKind::Softmax] = 1.2;
-  OpCostFactors[TensorOpKind::Pooling] = 1.5;
-  OpCostFactors[TensorOpKind::BatchNorm] = 1.5;
-  OpCostFactors[TensorOpKind::Activation] = 0.8;
-  OpCostFactors[TensorOpKind::TensorContraction] = 2.0;
-  OpCostFactors[TensorOpKind::Unknown] = 1.0;
+  OpCostFactors[llvm::tensor::TensorOpKind::MatrixMultiply] = 2.0;
+  OpCostFactors[llvm::tensor::TensorOpKind::Convolution] = 3.0;
+  OpCostFactors[llvm::tensor::TensorOpKind::ElementWiseAdd] = 1.0;
+  OpCostFactors[llvm::tensor::TensorOpKind::ElementWiseMul] = 1.0;
+  OpCostFactors[llvm::tensor::TensorOpKind::Reduction] = 1.5;
+  OpCostFactors[llvm::tensor::TensorOpKind::Transpose] = 1.2;
+  OpCostFactors[llvm::tensor::TensorOpKind::Reshape] = 0.5;
+  OpCostFactors[llvm::tensor::TensorOpKind::Concat] = 1.0;
+  OpCostFactors[llvm::tensor::TensorOpKind::Split] = 1.0;
+  OpCostFactors[llvm::tensor::TensorOpKind::Attention] = 2.5;
+  OpCostFactors[llvm::tensor::TensorOpKind::LayerNorm] = 1.5;
+  OpCostFactors[llvm::tensor::TensorOpKind::Softmax] = 1.2;
+  OpCostFactors[llvm::tensor::TensorOpKind::Pooling] = 1.5;
+  OpCostFactors[llvm::tensor::TensorOpKind::BatchNorm] = 1.5;
+  OpCostFactors[llvm::tensor::TensorOpKind::Activation] = 0.8;
+  OpCostFactors[llvm::tensor::TensorOpKind::TensorContraction] = 2.0;
+  OpCostFactors[llvm::tensor::TensorOpKind::Unknown] = 1.0;
 
   // Initialize cost reduction factors for different optimization strategies
-  StrategyCostFactors[OptimizationStrategy::None] = 1.0;
-  StrategyCostFactors[OptimizationStrategy::Fusion] = 0.8;
-  StrategyCostFactors[OptimizationStrategy::Vectorization] = 0.7;
-  StrategyCostFactors[OptimizationStrategy::Parallelization] = 0.5;
-  StrategyCostFactors[OptimizationStrategy::FusionAndVectorization] = 0.6;
-  StrategyCostFactors[OptimizationStrategy::FusionAndParallelization] = 0.4;
-  StrategyCostFactors[OptimizationStrategy::VectorizationAndParallelization] = 0.3;
-  StrategyCostFactors[OptimizationStrategy::All] = 0.2;
+  StrategyCostFactors[llvm::tensor::OptimizationStrategy::None] = 1.0;
+  StrategyCostFactors[llvm::tensor::OptimizationStrategy::Fusion] = 0.8;
+  StrategyCostFactors[llvm::tensor::OptimizationStrategy::Vectorization] = 0.7;
+  StrategyCostFactors[llvm::tensor::OptimizationStrategy::Parallelization] = 0.5;
+  StrategyCostFactors[llvm::tensor::OptimizationStrategy::FusionAndVectorization] = 0.6;
+  StrategyCostFactors[llvm::tensor::OptimizationStrategy::FusionAndParallelization] = 0.4;
+  StrategyCostFactors[llvm::tensor::OptimizationStrategy::VectorizationAndParallelization] = 0.3;
+  StrategyCostFactors[llvm::tensor::OptimizationStrategy::All] = 0.2;
 }
 
-double SimpleCostModel::estimateCost(const TensorOperation &Op) const {
+double llvm::tensor::SimpleCostModel::estimateCost(const llvm::tensor::TensorOperation &Op) const {
   // Get the cost factor for this operation kind
   auto It = OpCostFactors.find(Op.getKind());
   double CostFactor = It != OpCostFactors.end() ? It->second : 1.0;
@@ -62,7 +65,7 @@ double SimpleCostModel::estimateCost(const TensorOperation &Op) const {
   return Cost;
 }
 
-double SimpleCostModel::estimateCost(const Function &F) const {
+double llvm::tensor::SimpleCostModel::estimateCost(const llvm::Function &F) const {
   double TotalCost = 0.0;
 
   // Iterate over all instructions in the function
@@ -79,7 +82,7 @@ double SimpleCostModel::estimateCost(const Function &F) const {
   return TotalCost;
 }
 
-double SimpleCostModel::estimateCost(const TensorOperation &Op, OptimizationStrategy Strategy) const {
+double llvm::tensor::SimpleCostModel::estimateCost(const llvm::tensor::TensorOperation &Op, llvm::tensor::OptimizationStrategy Strategy) const {
   // Get the base cost of the operation
   double BaseCost = estimateCost(Op);
 
@@ -90,7 +93,7 @@ double SimpleCostModel::estimateCost(const TensorOperation &Op, OptimizationStra
   return BaseCost * ReductionFactor;
 }
 
-double SimpleCostModel::estimateCost(const Function &F, OptimizationStrategy Strategy) const {
+double llvm::tensor::SimpleCostModel::estimateCost(const llvm::Function &F, llvm::tensor::OptimizationStrategy Strategy) const {
   // Get the base cost of the function
   double BaseCost = estimateCost(F);
 
@@ -101,13 +104,13 @@ double SimpleCostModel::estimateCost(const Function &F, OptimizationStrategy Str
   return BaseCost * ReductionFactor;
 }
 
-OptimizationStrategy SimpleCostModel::getBestStrategy(const TensorOperation &Op) const {
+llvm::tensor::OptimizationStrategy llvm::tensor::SimpleCostModel::getBestStrategy(const llvm::tensor::TensorOperation &Op) const {
   // Try all optimization strategies and pick the one with the lowest cost
-  OptimizationStrategy BestStrategy = OptimizationStrategy::None;
+  llvm::tensor::OptimizationStrategy BestStrategy = llvm::tensor::OptimizationStrategy::None;
   double BestCost = estimateCost(Op, BestStrategy);
 
   for (auto It = StrategyCostFactors.begin(); It != StrategyCostFactors.end(); ++It) {
-    OptimizationStrategy Strategy = It->first;
+    llvm::tensor::OptimizationStrategy Strategy = It->first;
     double Cost = estimateCost(Op, Strategy);
 
     if (Cost < BestCost) {
@@ -119,13 +122,13 @@ OptimizationStrategy SimpleCostModel::getBestStrategy(const TensorOperation &Op)
   return BestStrategy;
 }
 
-OptimizationStrategy SimpleCostModel::getBestStrategy(const Function &F) const {
+llvm::tensor::OptimizationStrategy llvm::tensor::SimpleCostModel::getBestStrategy(const llvm::Function &F) const {
   // Try all optimization strategies and pick the one with the lowest cost
-  OptimizationStrategy BestStrategy = OptimizationStrategy::None;
+  llvm::tensor::OptimizationStrategy BestStrategy = llvm::tensor::OptimizationStrategy::None;
   double BestCost = estimateCost(F, BestStrategy);
 
   for (auto It = StrategyCostFactors.begin(); It != StrategyCostFactors.end(); ++It) {
-    OptimizationStrategy Strategy = It->first;
+    llvm::tensor::OptimizationStrategy Strategy = It->first;
     double Cost = estimateCost(F, Strategy);
 
     if (Cost < BestCost) {
@@ -138,12 +141,12 @@ OptimizationStrategy SimpleCostModel::getBestStrategy(const Function &F) const {
 }
 
 // MLCostModel implementation
-MLCostModel::MLCostModel() {
+llvm::tensor::MLCostModel::MLCostModel() {
   // Initialize model weights
   Weights = {1.0, 0.5, 0.3, 0.2, 0.1};
 }
 
-double MLCostModel::estimateCost(const TensorOperation &Op) const {
+double llvm::tensor::MLCostModel::estimateCost(const llvm::tensor::TensorOperation &Op) const {
   // Extract features from the operation
   auto Features = extractFeatures(Op);
 
@@ -151,7 +154,7 @@ double MLCostModel::estimateCost(const TensorOperation &Op) const {
   return predict(Features);
 }
 
-double MLCostModel::estimateCost(const Function &F) const {
+double llvm::tensor::MLCostModel::estimateCost(const llvm::Function &F) const {
   // Extract features from the function
   auto Features = extractFeatures(F);
 
@@ -159,7 +162,7 @@ double MLCostModel::estimateCost(const Function &F) const {
   return predict(Features);
 }
 
-double MLCostModel::estimateCost(const TensorOperation &Op, OptimizationStrategy Strategy) const {
+double llvm::tensor::MLCostModel::estimateCost(const llvm::tensor::TensorOperation &Op, llvm::tensor::OptimizationStrategy Strategy) const {
   // Extract features from the operation
   auto Features = extractFeatures(Op);
 
@@ -170,7 +173,7 @@ double MLCostModel::estimateCost(const TensorOperation &Op, OptimizationStrategy
   return predict(Features);
 }
 
-double MLCostModel::estimateCost(const Function &F, OptimizationStrategy Strategy) const {
+double llvm::tensor::MLCostModel::estimateCost(const llvm::Function &F, llvm::tensor::OptimizationStrategy Strategy) const {
   // Extract features from the function
   auto Features = extractFeatures(F);
 
@@ -181,13 +184,13 @@ double MLCostModel::estimateCost(const Function &F, OptimizationStrategy Strateg
   return predict(Features);
 }
 
-OptimizationStrategy MLCostModel::getBestStrategy(const TensorOperation &Op) const {
+llvm::tensor::OptimizationStrategy llvm::tensor::MLCostModel::getBestStrategy(const llvm::tensor::TensorOperation &Op) const {
   // Try all optimization strategies and pick the one with the lowest cost
-  OptimizationStrategy BestStrategy = OptimizationStrategy::None;
+  llvm::tensor::OptimizationStrategy BestStrategy = llvm::tensor::OptimizationStrategy::None;
   double BestCost = estimateCost(Op, BestStrategy);
 
-  for (int i = 0; i <= static_cast<int>(OptimizationStrategy::All); ++i) {
-    OptimizationStrategy Strategy = static_cast<OptimizationStrategy>(i);
+  for (int i = 0; i <= static_cast<int>(llvm::tensor::OptimizationStrategy::All); ++i) {
+    llvm::tensor::OptimizationStrategy Strategy = static_cast<llvm::tensor::OptimizationStrategy>(i);
     double Cost = estimateCost(Op, Strategy);
 
     if (Cost < BestCost) {
@@ -199,13 +202,13 @@ OptimizationStrategy MLCostModel::getBestStrategy(const TensorOperation &Op) con
   return BestStrategy;
 }
 
-OptimizationStrategy MLCostModel::getBestStrategy(const Function &F) const {
+llvm::tensor::OptimizationStrategy llvm::tensor::MLCostModel::getBestStrategy(const llvm::Function &F) const {
   // Try all optimization strategies and pick the one with the lowest cost
-  OptimizationStrategy BestStrategy = OptimizationStrategy::None;
+  llvm::tensor::OptimizationStrategy BestStrategy = llvm::tensor::OptimizationStrategy::None;
   double BestCost = estimateCost(F, BestStrategy);
 
-  for (int i = 0; i <= static_cast<int>(OptimizationStrategy::All); ++i) {
-    OptimizationStrategy Strategy = static_cast<OptimizationStrategy>(i);
+  for (int i = 0; i <= static_cast<int>(llvm::tensor::OptimizationStrategy::All); ++i) {
+    llvm::tensor::OptimizationStrategy Strategy = static_cast<llvm::tensor::OptimizationStrategy>(i);
     double Cost = estimateCost(F, Strategy);
 
     if (Cost < BestCost) {
@@ -217,7 +220,7 @@ OptimizationStrategy MLCostModel::getBestStrategy(const Function &F) const {
   return BestStrategy;
 }
 
-void MLCostModel::train(const std::vector<std::pair<TensorOperation *, double>> &TrainingData) {
+void llvm::tensor::MLCostModel::train(const std::vector<std::pair<llvm::tensor::TensorOperation *, double>> &TrainingData) {
   // Simple linear regression training
   // This is a placeholder implementation
 
@@ -238,7 +241,7 @@ void MLCostModel::train(const std::vector<std::pair<TensorOperation *, double>> 
   }
 }
 
-std::vector<double> MLCostModel::extractFeatures(const TensorOperation &Op) const {
+std::vector<double> llvm::tensor::MLCostModel::extractFeatures(const llvm::tensor::TensorOperation &Op) const {
   // Extract features from the operation
   std::vector<double> Features;
 
@@ -258,12 +261,12 @@ std::vector<double> MLCostModel::extractFeatures(const TensorOperation &Op) cons
   return Features;
 }
 
-std::vector<double> MLCostModel::extractFeatures(const Function &F) const {
+std::vector<double> llvm::tensor::MLCostModel::extractFeatures(const llvm::Function &F) const {
   // Extract features from the function
   std::vector<double> Features;
 
   // Count the number of each type of tensor operation
-  std::map<TensorOpKind, int> OpCounts;
+  std::map<llvm::tensor::TensorOpKind, int> OpCounts;
 
   // Iterate over all instructions in the function
   for (const auto &BB : F) {
@@ -277,8 +280,8 @@ std::vector<double> MLCostModel::extractFeatures(const Function &F) const {
   }
 
   // Add the operation counts as features
-  for (int i = 0; i <= static_cast<int>(TensorOpKind::TensorContraction); ++i) {
-    TensorOpKind Kind = static_cast<TensorOpKind>(i);
+  for (int i = 0; i <= static_cast<int>(llvm::tensor::TensorOpKind::TensorContraction); ++i) {
+    llvm::tensor::TensorOpKind Kind = static_cast<llvm::tensor::TensorOpKind>(i);
     Features.push_back(static_cast<double>(OpCounts[Kind]));
   }
 
@@ -294,7 +297,7 @@ std::vector<double> MLCostModel::extractFeatures(const Function &F) const {
   return Features;
 }
 
-double MLCostModel::predict(const std::vector<double> &Features) const {
+double llvm::tensor::MLCostModel::predict(const std::vector<double> &Features) const {
   // Simple linear model prediction
   double Prediction = 0.0;
 
@@ -306,7 +309,7 @@ double MLCostModel::predict(const std::vector<double> &Features) const {
 }
 
 // Factory function to create a cost model
-std::unique_ptr<CostModel> createCostModel(bool UseML) {
+std::unique_ptr<llvm::tensor::CostModel> llvm::tensor::createCostModel(bool UseML) {
   if (UseML) {
     return std::make_unique<MLCostModel>();
   } else {
