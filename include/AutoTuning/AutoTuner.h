@@ -13,22 +13,22 @@ namespace tensor {
 class AutoTuner {
 public:
   AutoTuner(bool UseML = false);
-  
+
   /// Tune a function and apply the best optimization strategy
   bool tune(Function &F, FunctionAnalysisManager &AM);
-  
+
   /// Get the best optimization strategy for a function
   OptimizationStrategy getBestStrategy(const Function &F) const;
-  
+
   /// Get the cost model
   const CostModel &getCostModel() const { return *CostModelImpl; }
-  
+
+  /// Apply an optimization strategy to a function
+  bool applyStrategy(Function &F, FunctionAnalysisManager &AM, OptimizationStrategy Strategy);
+
 private:
   /// Cost model implementation
   std::unique_ptr<CostModel> CostModelImpl;
-  
-  /// Apply an optimization strategy to a function
-  bool applyStrategy(Function &F, FunctionAnalysisManager &AM, OptimizationStrategy Strategy);
 };
 
 } // namespace tensor
