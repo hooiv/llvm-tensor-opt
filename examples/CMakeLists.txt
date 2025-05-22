@@ -66,6 +66,19 @@ target_link_libraries(tensor_benchmark
   LLVMAsmPrinter
   LLVMMCParser
   LLVMMC
+  # Add LLVM pass manager libraries
+  LLVMPasses
+  LLVMTransformUtils
+  LLVMScalarOpts
+  LLVMipo
+  LLVMAggressiveInstCombine
+  LLVMInstCombine
+  LLVMInstrumentation
+  LLVMVectorize
+  LLVMObjCARCOpts
+  LLVMCoroutines
+  LLVMCFGuard
+  LLVMLinker
 )
 
 # Add MLIR libraries if MLIR is enabled
