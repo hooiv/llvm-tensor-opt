@@ -57,6 +57,16 @@ bool TensorOperation::canFuseWith(const TensorOperation &Other) const {
   return Kind == Other.Kind;
 }
 
+bool TensorOperation::canVectorize() const {
+  // Default implementation: most operations can be vectorized
+  return Kind != TensorOpKind::Unknown;
+}
+
+bool TensorOperation::canParallelize() const {
+  // Default implementation: most operations can be parallelized
+  return Kind != TensorOpKind::Unknown;
+}
+
 std::vector<Value *> TensorOperation::getOperands() const {
   std::vector<Value *> Operands;
   for (Use &U : Inst->operands()) {
@@ -180,7 +190,7 @@ std::unique_ptr<TensorOperation> TensorOperationRegistry::matchAndCreate(Instruc
       return Pattern.Creator(Inst);
     }
   }
-  
+
   // No match found, return a generic tensor operation
   return std::make_unique<TensorOperation>(TensorOpKind::Unknown, Inst);
 }
@@ -207,7 +217,7 @@ bool isMatrixMultiply(Instruction *Inst) {
       return true;
     }
   }
-  
+
   // Check for nested loops with multiply-accumulate pattern
   // This is a simplified check and would need to be more sophisticated in practice
   if (auto *Store = dyn_cast<StoreInst>(Inst)) {
@@ -224,7 +234,7 @@ bool isMatrixMultiply(Instruction *Inst) {
       }
     }
   }
-  
+
   return false;
 }
 
@@ -237,10 +247,10 @@ bool isConvolution(Instruction *Inst) {
       return true;
     }
   }
-  
+
   // More sophisticated pattern matching would be needed for detecting
   // convolution patterns in the IR
-  
+
   return false;
 }
 

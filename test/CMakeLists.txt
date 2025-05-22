@@ -30,6 +30,11 @@ target_link_libraries(unit_tests
   gtest_main
   LLVMCore
   LLVMSupport
+  LLVMAnalysis
+  LLVMPasses
+  LLVMTarget
+  LLVMIRReader
+  LLVMTransformUtils
 )
 
 add_test(NAME UnitTests COMMAND unit_tests)
@@ -48,6 +53,11 @@ target_link_libraries(integration_tests
   gtest_main
   LLVMCore
   LLVMSupport
+  LLVMAnalysis
+  LLVMPasses
+  LLVMTarget
+  LLVMIRReader
+  LLVMTransformUtils
 )
 
 add_test(NAME IntegrationTests COMMAND integration_tests)

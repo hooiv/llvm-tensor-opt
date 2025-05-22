@@ -62,7 +62,7 @@ TensorDataFlowAnalysis::Result TensorDataFlowAnalysis::run(Function &F, Function
 }
 
 // Helper function to identify tensor operations
-bool isTensorOperation(Instruction *I) {
+inline bool isTensorOperation(Instruction *I) {
   // Use the tensor operation registry to identify tensor operations
   auto Op = TensorOperationRegistry::getInstance().matchAndCreate(I);
   return Op->getKind() != TensorOpKind::Unknown;

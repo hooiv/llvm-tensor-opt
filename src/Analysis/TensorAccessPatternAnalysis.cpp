@@ -93,22 +93,7 @@ void updateStatistics(AccessPattern Pattern) {
   }
 }
 
-// Helper function to identify tensor operations
-bool isTensorOperation(Instruction *I) {
-  // This is a placeholder for the actual tensor operation identification logic
-  // In a real implementation, this would use pattern matching to identify tensor operations
-
-  // For now, just check if the instruction is a call to a function with "tensor" in the name
-  if (auto *Call = dyn_cast<CallInst>(I)) {
-    if (auto *Callee = Call->getCalledFunction()) {
-      if (Callee->getName().contains("tensor")) {
-        return true;
-      }
-    }
-  }
-
-  return false;
-}
+// Use the isTensorOperation function from TensorDataFlowAnalysis.cpp
 
 // Legacy pass implementation
 char TensorAccessPatternAnalysisWrapperPass::ID = 0;
