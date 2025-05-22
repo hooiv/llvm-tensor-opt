@@ -13,6 +13,19 @@ target_link_libraries(tensor_opt_tool
   LLVMIRReader
   LLVMPasses
   LLVMExecutionEngine
+  # Add LLVM target libraries for native target initialization
+  LLVMX86Info
+  LLVMX86CodeGen
+  LLVMX86AsmParser
+  LLVMX86Desc
+  LLVMTarget
+  LLVMAnalysis
+  LLVMBitWriter
+  LLVMBitReader
+  LLVMSelectionDAG
+  LLVMAsmPrinter
+  LLVMMCParser
+  LLVMMC
 )
 
 # Add MLIR libraries if MLIR is enabled
@@ -40,6 +53,19 @@ target_link_libraries(tensor_benchmark
   LLVMSupport
   LLVMIRReader
   LLVMExecutionEngine
+  # Add LLVM target libraries for native target initialization
+  LLVMX86Info
+  LLVMX86CodeGen
+  LLVMX86AsmParser
+  LLVMX86Desc
+  LLVMTarget
+  LLVMAnalysis
+  LLVMBitWriter
+  LLVMBitReader
+  LLVMSelectionDAG
+  LLVMAsmPrinter
+  LLVMMCParser
+  LLVMMC
 )
 
 # Add MLIR libraries if MLIR is enabled
