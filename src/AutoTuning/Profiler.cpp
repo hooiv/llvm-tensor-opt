@@ -116,10 +116,9 @@ Function *Profiler::applyStrategy(Function &F, OptimizationStrategy Strategy) {
     // Clone instructions
     for (const Instruction &I : BB) {
       Instruction *NewInst = I.clone();
-      if (NewInst->getType()->isVoidTy()) {
-        NewBB->getInstList().push_back(NewInst);
-      } else {
-        NewBB->getInstList().push_back(NewInst);
+      // Insert the instruction at the end of the basic block
+      NewInst->insertInto(NewBB, NewBB->end());
+      if (!NewInst->getType()->isVoidTy()) {
         VMap[&I] = NewInst;
       }
     }
@@ -179,10 +178,9 @@ double Profiler::measureExecutionTime(Function &F, int NumRuns) {
 
     for (const Instruction &I : BB) {
       Instruction *NewInst = I.clone();
-      if (NewInst->getType()->isVoidTy()) {
-        NewBB->getInstList().push_back(NewInst);
-      } else {
-        NewBB->getInstList().push_back(NewInst);
+      // Insert the instruction at the end of the basic block
+      NewInst->insertInto(NewBB, NewBB->end());
+      if (!NewInst->getType()->isVoidTy()) {
         VMap[&I] = NewInst;
       }
     }
