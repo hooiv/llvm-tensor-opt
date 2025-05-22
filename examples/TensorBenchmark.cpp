@@ -22,6 +22,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <numeric> // For std::accumulate
 
 using namespace llvm;
 using namespace std::chrono;
@@ -49,15 +50,21 @@ struct BenchmarkResult {
 
 // Run a pass and measure its execution time
 template <typename PassT>
-BenchmarkResult runPass(PassT& Pass, Function& F, FunctionAnalysisManager& FAM, const std::string& PassName) {
+BenchmarkResult runPass(const PassT& Pass, Function& F, FunctionAnalysisManager& FAM, const std::string& PassName) {
+  // Create a copy of the pass for each run
+  PassT PassCopy = Pass;
+
   // Warm up
-  Pass.run(F, FAM);
+  PassCopy.run(F, FAM);
 
   // Benchmark
   std::vector<double> Times;
   for (int i = 0; i < NumRuns; ++i) {
+    // Create a fresh copy for each run to ensure consistent state
+    PassT RunPass = Pass;
+
     auto Start = high_resolution_clock::now();
-    Pass.run(F, FAM);
+    RunPass.run(F, FAM);
     auto End = high_resolution_clock::now();
 
     double TimeMs = duration_cast<microseconds>(End - Start).count() / 1000.0;
