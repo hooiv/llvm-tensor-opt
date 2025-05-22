@@ -96,10 +96,22 @@ add_executable(matrix_multiply
   MatrixMultiply.cpp
 )
 
+# Always link with basic libraries
+target_link_libraries(matrix_multiply
+  PRIVATE
+  LLVMTensorTransforms
+  LLVMTensorAnalysis
+  LLVMCore
+  LLVMSupport
+)
+
+# Add CUDA libraries if CUDA is enabled
 if(CUDA_ENABLED)
   target_link_libraries(matrix_multiply
     PRIVATE
     LLVMTensorCUDA
     ${CUDA_LIBRARIES}
+    CUDA::cudart
+    CUDA::cuda_driver
   )
 endif()
