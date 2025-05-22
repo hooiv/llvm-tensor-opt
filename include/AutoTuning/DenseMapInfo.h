@@ -2,10 +2,21 @@
 #define LLVM_TENSOR_OPT_AUTO_TUNING_DENSE_MAP_INFO_H
 
 #include "Analysis/TensorOperationRegistry.h"
-#include "AutoTuning/CostModel.h"
 #include "llvm/ADT/DenseMapInfo.h"
 
+// Forward declaration of OptimizationStrategy enum
 namespace llvm {
+namespace tensor {
+enum class OptimizationStrategy {
+  None,
+  Fusion,
+  Vectorization,
+  Parallelization,
+  FusionAndVectorization,
+  FusionAndParallelization,
+  VectorizationAndParallelization,
+  All
+};
 
 // Specialization of DenseMapInfo for TensorOpKind
 template<>

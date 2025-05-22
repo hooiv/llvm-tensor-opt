@@ -4,6 +4,7 @@
 #include "Analysis/TensorAccessPatternAnalysis.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/Support/Debug.h"
+#include <map>
 
 #define DEBUG_TYPE "cost-model"
 
@@ -30,7 +31,7 @@ SimpleCostModel::SimpleCostModel() {
   OpCostFactors[TensorOpKind::Activation] = 0.8;
   OpCostFactors[TensorOpKind::TensorContraction] = 2.0;
   OpCostFactors[TensorOpKind::Unknown] = 1.0;
-  
+
   // Initialize cost reduction factors for different optimization strategies
   StrategyCostFactors[OptimizationStrategy::None] = 1.0;
   StrategyCostFactors[OptimizationStrategy::Fusion] = 0.8;
@@ -46,10 +47,10 @@ double SimpleCostModel::estimateCost(const TensorOperation &Op) const {
   // Get the cost factor for this operation kind
   auto It = OpCostFactors.find(Op.getKind());
   double CostFactor = It != OpCostFactors.end() ? It->second : 1.0;
-  
+
   // Get the dimensions of the operation
   auto Dims = Op.getDimensions();
-  
+
   // Calculate the cost based on the dimensions
   double Cost = CostFactor;
   for (auto Dim : Dims) {
@@ -57,46 +58,46 @@ double SimpleCostModel::estimateCost(const TensorOperation &Op) const {
       Cost *= Dim;
     }
   }
-  
+
   return Cost;
 }
 
 double SimpleCostModel::estimateCost(const Function &F) const {
   double TotalCost = 0.0;
-  
+
   // Iterate over all instructions in the function
   for (const auto &BB : F) {
     for (const auto &I : BB) {
       // Create a tensor operation from the instruction
       auto Op = createTensorOperation(const_cast<Instruction *>(&I));
-      
+
       // Add the cost of this operation to the total cost
       TotalCost += estimateCost(*Op);
     }
   }
-  
+
   return TotalCost;
 }
 
 double SimpleCostModel::estimateCost(const TensorOperation &Op, OptimizationStrategy Strategy) const {
   // Get the base cost of the operation
   double BaseCost = estimateCost(Op);
-  
+
   // Apply the cost reduction factor for the optimization strategy
   auto It = StrategyCostFactors.find(Strategy);
   double ReductionFactor = It != StrategyCostFactors.end() ? It->second : 1.0;
-  
+
   return BaseCost * ReductionFactor;
 }
 
 double SimpleCostModel::estimateCost(const Function &F, OptimizationStrategy Strategy) const {
   // Get the base cost of the function
   double BaseCost = estimateCost(F);
-  
+
   // Apply the cost reduction factor for the optimization strategy
   auto It = StrategyCostFactors.find(Strategy);
   double ReductionFactor = It != StrategyCostFactors.end() ? It->second : 1.0;
-  
+
   return BaseCost * ReductionFactor;
 }
 
@@ -104,17 +105,17 @@ OptimizationStrategy SimpleCostModel::getBestStrategy(const TensorOperation &Op)
   // Try all optimization strategies and pick the one with the lowest cost
   OptimizationStrategy BestStrategy = OptimizationStrategy::None;
   double BestCost = estimateCost(Op, BestStrategy);
-  
+
   for (auto It = StrategyCostFactors.begin(); It != StrategyCostFactors.end(); ++It) {
     OptimizationStrategy Strategy = It->first;
     double Cost = estimateCost(Op, Strategy);
-    
+
     if (Cost < BestCost) {
       BestCost = Cost;
       BestStrategy = Strategy;
     }
   }
-  
+
   return BestStrategy;
 }
 
@@ -122,17 +123,17 @@ OptimizationStrategy SimpleCostModel::getBestStrategy(const Function &F) const {
   // Try all optimization strategies and pick the one with the lowest cost
   OptimizationStrategy BestStrategy = OptimizationStrategy::None;
   double BestCost = estimateCost(F, BestStrategy);
-  
+
   for (auto It = StrategyCostFactors.begin(); It != StrategyCostFactors.end(); ++It) {
     OptimizationStrategy Strategy = It->first;
     double Cost = estimateCost(F, Strategy);
-    
+
     if (Cost < BestCost) {
       BestCost = Cost;
       BestStrategy = Strategy;
     }
   }
-  
+
   return BestStrategy;
 }
 
@@ -145,7 +146,7 @@ MLCostModel::MLCostModel() {
 double MLCostModel::estimateCost(const TensorOperation &Op) const {
   // Extract features from the operation
   auto Features = extractFeatures(Op);
-  
+
   // Predict the cost using the ML model
   return predict(Features);
 }
@@ -153,7 +154,7 @@ double MLCostModel::estimateCost(const TensorOperation &Op) const {
 double MLCostModel::estimateCost(const Function &F) const {
   // Extract features from the function
   auto Features = extractFeatures(F);
-  
+
   // Predict the cost using the ML model
   return predict(Features);
 }
@@ -161,10 +162,10 @@ double MLCostModel::estimateCost(const Function &F) const {
 double MLCostModel::estimateCost(const TensorOperation &Op, OptimizationStrategy Strategy) const {
   // Extract features from the operation
   auto Features = extractFeatures(Op);
-  
+
   // Add features for the optimization strategy
   Features.push_back(static_cast<double>(Strategy));
-  
+
   // Predict the cost using the ML model
   return predict(Features);
 }
@@ -172,10 +173,10 @@ double MLCostModel::estimateCost(const TensorOperation &Op, OptimizationStrategy
 double MLCostModel::estimateCost(const Function &F, OptimizationStrategy Strategy) const {
   // Extract features from the function
   auto Features = extractFeatures(F);
-  
+
   // Add features for the optimization strategy
   Features.push_back(static_cast<double>(Strategy));
-  
+
   // Predict the cost using the ML model
   return predict(Features);
 }
@@ -184,17 +185,17 @@ OptimizationStrategy MLCostModel::getBestStrategy(const TensorOperation &Op) con
   // Try all optimization strategies and pick the one with the lowest cost
   OptimizationStrategy BestStrategy = OptimizationStrategy::None;
   double BestCost = estimateCost(Op, BestStrategy);
-  
+
   for (int i = 0; i <= static_cast<int>(OptimizationStrategy::All); ++i) {
     OptimizationStrategy Strategy = static_cast<OptimizationStrategy>(i);
     double Cost = estimateCost(Op, Strategy);
-    
+
     if (Cost < BestCost) {
       BestCost = Cost;
       BestStrategy = Strategy;
     }
   }
-  
+
   return BestStrategy;
 }
 
@@ -202,33 +203,33 @@ OptimizationStrategy MLCostModel::getBestStrategy(const Function &F) const {
   // Try all optimization strategies and pick the one with the lowest cost
   OptimizationStrategy BestStrategy = OptimizationStrategy::None;
   double BestCost = estimateCost(F, BestStrategy);
-  
+
   for (int i = 0; i <= static_cast<int>(OptimizationStrategy::All); ++i) {
     OptimizationStrategy Strategy = static_cast<OptimizationStrategy>(i);
     double Cost = estimateCost(F, Strategy);
-    
+
     if (Cost < BestCost) {
       BestCost = Cost;
       BestStrategy = Strategy;
     }
   }
-  
+
   return BestStrategy;
 }
 
 void MLCostModel::train(const std::vector<std::pair<TensorOperation *, double>> &TrainingData) {
   // Simple linear regression training
   // This is a placeholder implementation
-  
+
   // Extract features and targets from the training data
   std::vector<std::vector<double>> Features;
   std::vector<double> Targets;
-  
+
   for (const auto &Data : TrainingData) {
     Features.push_back(extractFeatures(*Data.first));
     Targets.push_back(Data.second);
   }
-  
+
   // Train the model
   // This is a simplified implementation
   Weights.resize(Features[0].size());
@@ -240,62 +241,67 @@ void MLCostModel::train(const std::vector<std::pair<TensorOperation *, double>> 
 std::vector<double> MLCostModel::extractFeatures(const TensorOperation &Op) const {
   // Extract features from the operation
   std::vector<double> Features;
-  
+
   // Add the operation kind as a feature
   Features.push_back(static_cast<double>(Op.getKind()));
-  
+
   // Add the dimensions as features
   auto Dims = Op.getDimensions();
   for (auto Dim : Dims) {
     Features.push_back(static_cast<double>(Dim));
   }
-  
+
   // Add other features
   Features.push_back(Op.canVectorize() ? 1.0 : 0.0);
   Features.push_back(Op.canParallelize() ? 1.0 : 0.0);
-  
+
   return Features;
 }
 
 std::vector<double> MLCostModel::extractFeatures(const Function &F) const {
   // Extract features from the function
   std::vector<double> Features;
-  
+
   // Count the number of each type of tensor operation
   std::map<TensorOpKind, int> OpCounts;
-  
+
   // Iterate over all instructions in the function
   for (const auto &BB : F) {
     for (const auto &I : BB) {
       // Create a tensor operation from the instruction
       auto Op = createTensorOperation(const_cast<Instruction *>(&I));
-      
+
       // Increment the count for this operation kind
       ++OpCounts[Op->getKind()];
     }
   }
-  
+
   // Add the operation counts as features
   for (int i = 0; i <= static_cast<int>(TensorOpKind::TensorContraction); ++i) {
     TensorOpKind Kind = static_cast<TensorOpKind>(i);
     Features.push_back(static_cast<double>(OpCounts[Kind]));
   }
-  
+
   // Add other features
   Features.push_back(static_cast<double>(F.size()));
-  Features.push_back(static_cast<double>(F.getBasicBlockList().size()));
-  
+  // Count basic blocks directly instead of using private getBasicBlockList()
+  unsigned NumBasicBlocks = 0;
+  for (const auto &BB : F) {
+    NumBasicBlocks++;
+  }
+  Features.push_back(static_cast<double>(NumBasicBlocks));
+
   return Features;
 }
 
 double MLCostModel::predict(const std::vector<double> &Features) const {
   // Simple linear model prediction
   double Prediction = 0.0;
-  
+
   for (size_t i = 0; i < std::min(Features.size(), Weights.size()); ++i) {
     Prediction += Features[i] * Weights[i];
   }
-  
+
   return Prediction;
 }
 
