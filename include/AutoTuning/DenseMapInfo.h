@@ -17,6 +17,7 @@ enum class OptimizationStrategy {
   VectorizationAndParallelization,
   All
 };
+} // end namespace tensor
 
 // Specialization of DenseMapInfo for TensorOpKind
 template<>
