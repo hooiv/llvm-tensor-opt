@@ -7,16 +7,23 @@ target_link_libraries(tensor_opt_tool
   LLVMTensorTransforms
   LLVMTensorAnalysis
   LLVMTensorCUDA
-  LLVMTensorMLIR
   LLVMTensorAutoTuning
   LLVMCore
   LLVMSupport
   LLVMIRReader
   LLVMPasses
   LLVMExecutionEngine
-  MLIRIR
-  MLIRLLVMDialect
 )
+
+# Add MLIR libraries if MLIR is enabled
+if(MLIR_ENABLED)
+  target_link_libraries(tensor_opt_tool
+    PRIVATE
+    LLVMTensorMLIR
+    MLIRIR
+    MLIRLLVMDialect
+  )
+endif()
 
 # Benchmark executable
 add_executable(tensor_benchmark
@@ -28,15 +35,22 @@ target_link_libraries(tensor_benchmark
   LLVMTensorTransforms
   LLVMTensorAnalysis
   LLVMTensorCUDA
-  LLVMTensorMLIR
   LLVMTensorAutoTuning
   LLVMCore
   LLVMSupport
   LLVMIRReader
   LLVMExecutionEngine
-  MLIRIR
-  MLIRLLVMDialect
 )
+
+# Add MLIR libraries if MLIR is enabled
+if(MLIR_ENABLED)
+  target_link_libraries(tensor_benchmark
+    PRIVATE
+    LLVMTensorMLIR
+    MLIRIR
+    MLIRLLVMDialect
+  )
+endif()
 
 # Example tensor operations
 add_executable(matrix_multiply

@@ -9,7 +9,11 @@
 #include "AutoTuning/AutoTuner.h"
 #include "AutoTuning/CostModel.h"
 #include "AutoTuning/Profiler.h"
+
+// Include MLIR headers only if MLIR is enabled
+#ifdef MLIR_ENABLED
 #include "MLIR/MLIRTensorToLLVM.h"
+#endif
 
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
@@ -152,12 +156,16 @@ int main(int argc, char **argv) {
     MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
   }
 
-  // Add MLIR-based optimizations if requested
+  // Add MLIR-based optimizations if requested and available
   if (EnableMLIR) {
+#ifdef MLIR_ENABLED
     outs() << "Adding MLIR-based optimizations\n";
 
     // Add the MLIR tensor to LLVM conversion pass
     MPM.addPass(mlir::tensor_opt::createConvertTensorToLLVMPass());
+#else
+    outs() << "MLIR support is not available. Skipping MLIR-based optimizations.\n";
+#endif
   }
 
   // Run the passes
