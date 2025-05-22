@@ -2,7 +2,6 @@
 #define LLVM_TENSOR_OPT_AUTO_TUNING_COST_MODEL_H
 
 #include "Analysis/TensorOperationRegistry.h"
-#include "AutoTuning/DenseMapInfo.h"
 #include "llvm/IR/Function.h"
 #include "llvm/ADT/DenseMap.h"
 #include <vector>
@@ -22,6 +21,16 @@ enum class OptimizationStrategy {
   VectorizationAndParallelization,
   All
 };
+
+// Include DenseMapInfo.h after defining OptimizationStrategy
+// to avoid circular dependencies
+} // end namespace tensor
+} // end namespace llvm
+
+#include "AutoTuning/DenseMapInfo.h"
+
+namespace llvm {
+namespace tensor {
 
 /// Class representing a cost model for tensor operations
 class CostModel {

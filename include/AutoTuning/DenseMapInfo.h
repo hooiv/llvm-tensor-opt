@@ -7,16 +7,8 @@
 // Forward declaration of OptimizationStrategy enum
 namespace llvm {
 namespace tensor {
-enum class OptimizationStrategy {
-  None,
-  Fusion,
-  Vectorization,
-  Parallelization,
-  FusionAndVectorization,
-  FusionAndParallelization,
-  VectorizationAndParallelization,
-  All
-};
+// OptimizationStrategy is defined in CostModel.h
+enum class OptimizationStrategy;
 } // end namespace tensor
 
 // Specialization of DenseMapInfo for TensorOpKind
